@@ -1,4 +1,4 @@
-namespace PaymentGateway.Application.Exceptions;
+namespace PaymentGateway.Shared.Exceptions;
 
 public class BankUnavailableException : Exception
 {

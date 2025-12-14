@@ -17,7 +17,7 @@ Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentGateway.Domain", "sr
 EndProject
 Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentGateway.Config", "src\PaymentGateway.Config\PaymentGateway.Config.csproj", "{CECB250F-9C9E-4C1C-AB5D-6FBDFB768F28}"
 EndProject
-Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentGateway.Application", "src\PaymentGateway.Application\PaymentGateway.Application.csproj", "{71F1024D-911E-49A8-91AC-8F477715EE24}"
+Project("{FAE04EC0-301F-11D3-BF4B-00C04F79EFBC}") = "PaymentGateway.Shared", "src\PaymentGateway.Shared\PaymentGateway.Shared.csproj", "{71F1024D-911E-49A8-91AC-8F477715EE24}"
 EndProject
 Global
 	GlobalSection(SolutionConfigurationPlatforms) = preSolution
