@@ -1,6 +1,9 @@
 using Microsoft.Extensions.DependencyInjection;
-
 using PaymentGateway.DAL.Clients;
+using PaymentGateway.DAL.Mappers;
+using PaymentGateway.DAL.Processors;
+using PaymentGateway.DAL.Repositories;
+using PaymentGateway.Domain.Processors;
 
 namespace PaymentGateway.DAL;
 
@@ -8,11 +11,36 @@ public static class Startup
 {
     public static void AddServices(this IServiceCollection services)
     {
+        AddClients(services);
+        AddRepositories(services);
+        AddProcessors(services);
+        AddMappers(services);
+    }
+    
+    private static void AddClients(IServiceCollection services)
+    {
         services.AddHttpClient<IBaseClient, BaseClient>(client =>
         {
-            //client.BaseAddress = new Uri(Configuration["BaseUrl"]); todo implement config
+            client.BaseAddress = new Uri("http://localhost:8080");
         });
-        //.AddPolicyHandler(GetRetryPolicy())
-        //.AddPolicyHandler(GetCircuitBreakerPolicy());
+        services.AddSingleton<IBankSimulatorClient, BankSimulatorClient>();
+    }
+    
+    private static void AddRepositories(IServiceCollection services)
+    {
+        services.AddSingleton<IPaymentsRepository, PaymentsRepository>();
+    }
+    
+    private static void AddProcessors(this IServiceCollection services)
+    {
+        services.AddSingleton<IPaymentProcessor, PaymentProcessor>();
+        services.AddSingleton<IPaymentDataProcessor, PaymentDataProcessor>();
+    }
+
+    private static void AddMappers(this IServiceCollection services)
+    {
+        services.AddSingleton<IPaymentMapper, PaymentMapper>();
+        services.AddSingleton<IPaymentRequestDaoMapper, PaymentRequestDaoMapper>();
+        services.AddSingleton<IPaymentResponseMapper, PaymentResponseMapper>();
     }
 }

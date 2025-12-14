@@ -12,10 +12,7 @@
 
   <ItemGroup>
     <ProjectReference Include="..\PaymentGateway.Domain\PaymentGateway.Domain.csproj" />
-  </ItemGroup>
-
-  <ItemGroup>
-    <ProjectReference Include="..\PaymentGateway.Domain\PaymentGateway.Domain.csproj" />
+    <ProjectReference Include="..\PaymentGateway.DAL\PaymentGateway.DAL.csproj" />
   </ItemGroup>
 
 </Project>
