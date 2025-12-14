@@ -1,9 +1,11 @@
+using PaymentGateway.Domain.Entities;
+
 namespace PaymentGateway.DAL.Entities;
 
 public record PaymentEntity(
     Guid Id,
     Status Status,
-    int CardNumber,
+    string CardNumber,
     int ExpiryMonth,
     int ExpiryYear,
     string Currency,
