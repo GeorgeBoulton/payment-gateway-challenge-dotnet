@@ -4,5 +4,7 @@ namespace PaymentGateway.Domain.Services;
 
 public interface IPaymentService
 {
-    Task<Payment> ProcessPaymentAsync(Payment payment);
+    Payment GetPayment(Guid id);
+    
+    Task<Payment> ProcessPaymentAsync(PaymentRequest paymentRequest);
 }
