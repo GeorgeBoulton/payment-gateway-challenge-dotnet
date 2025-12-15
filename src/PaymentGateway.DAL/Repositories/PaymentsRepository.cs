@@ -12,7 +12,7 @@ public class PaymentsRepository : IPaymentsRepository
         Payments.Add(paymentEntity);
     }
 
-    public PaymentEntity Get(Guid id)
+    public PaymentEntity? Get(Guid id)
     {
         return Payments.FirstOrDefault(p => p.Id == id);
     }

@@ -7,11 +7,11 @@ public class PaymentService(
     IPaymentProcessor paymentProcessor,
     IPaymentDataProcessor paymentDataProcessor) : IPaymentService
 {
-    public Payment GetPayment(Guid id)
+    public Payment? GetPayment(Guid id)
     {
         var payment = paymentDataProcessor.RetrievePayment(id);
 
-        return MaskCardNumber(payment);
+        return payment is not null ? MaskCardNumber(payment) : null; 
     }
     
     // todo do we want to create some kind of tryRequest that we can wrap return types?

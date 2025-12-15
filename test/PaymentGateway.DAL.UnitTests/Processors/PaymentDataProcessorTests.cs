@@ -49,6 +49,7 @@ public class PaymentDataProcessorTests
         _paymentsRepository.Received(1).Add(paymentEntity);
     }
 
+    [Ignore("Masking is happening in the domain")]
     [TestCase("4758 3644 1283 2839", "**** **** **** 2839")]
     [TestCase("1234567898765432"   , "**** **** **** 5432")]
     [TestCase("4000 11112222 3333" , "**** **** **** 3333")]
@@ -73,5 +74,18 @@ public class PaymentDataProcessorTests
         result.Should().BeEquivalentTo(payment, options => options
             .Excluding(p => p.CardNumber));
         result.CardNumber.Should().BeEquivalentTo(expectedMasked);
+    }
+
+    [Test] public void RetrievePayment_GivenPaymentDoesNotExist_ReturnsNull()
+    {
+        // Arrange
+        var payment = _fixture.Create<Payment>();
+        
+        // Act
+        var result = _sut.RetrievePayment(Guid.NewGuid());
+        
+        // Assert
+        _paymentMapper.Received(0).Map(payment);
+        result.Should().BeNull();
     }
 }

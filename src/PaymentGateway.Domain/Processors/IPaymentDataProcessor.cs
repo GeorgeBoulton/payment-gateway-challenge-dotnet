@@ -6,5 +6,5 @@ public interface IPaymentDataProcessor
 {
     void StorePayment(Payment payment);
 
-    Payment RetrievePayment(Guid id);
+    Payment? RetrievePayment(Guid id);
 }

@@ -17,12 +17,10 @@ public class PaymentDataProcessor(
         paymentsRepository.Add(paymentEntity);
     }
 
-    public Payment RetrievePayment(Guid id)
+    public Payment? RetrievePayment(Guid id)
     {
         var paymentEntity = paymentsRepository.Get(id);
 
-        var payment = paymentMapper.Map(paymentEntity);
-
-        return payment with { CardNumber = $"**** **** **** {payment.CardNumber[^4..]}" };
+        return paymentEntity is not null ? paymentMapper.Map(paymentEntity) : null; 
     }
 }
