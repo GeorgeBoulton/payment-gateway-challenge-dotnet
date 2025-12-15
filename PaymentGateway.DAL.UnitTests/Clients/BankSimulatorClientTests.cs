@@ -1,10 +1,8 @@
 using System.Net;
-
 using AutoFixture;
 using FluentAssertions;
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-
 using PaymentGateway.DAL.Clients;
 using PaymentGateway.DAL.DAOs;
 using PaymentGateway.Shared.Exceptions;
@@ -12,7 +10,6 @@ using PaymentGateway.Shared.Exceptions;
 namespace PaymentGateway.DAL.UnitTests.Clients;
 
 [TestFixture]
-[TestOf(typeof(BankSimulatorClientTests))]
 public class BankSimulatorClientTests
 {
     private readonly Fixture _fixture = new();

@@ -5,10 +5,8 @@ namespace PaymentGateway.DAL.Mappers;
 
 public class PaymentMapper : IPaymentMapper
 {
-    public PaymentEntity Map(Payment payment)
-    {
-        
-        return new PaymentEntity(
+    public PaymentEntity Map(Payment payment) =>
+        new(
             payment.Id,
             Enum.Parse<Status>(payment.Status),
             payment.CardNumber,
@@ -18,11 +16,9 @@ public class PaymentMapper : IPaymentMapper
             payment.Amount,
             payment.AuthorizationCode ?? null
         );
-    }
 
-    public Payment Map(PaymentEntity payment)
-    {
-        return new Payment(
+    public Payment Map(PaymentEntity payment) =>
+        new(
             payment.Id, 
             payment.CardNumber, 
             payment.ExpiryMonth, 
@@ -31,5 +27,4 @@ public class PaymentMapper : IPaymentMapper
             payment.Amount, 
             payment.Status.ToString(), 
             payment.AuthorizationCode ?? null);
-    }
 }

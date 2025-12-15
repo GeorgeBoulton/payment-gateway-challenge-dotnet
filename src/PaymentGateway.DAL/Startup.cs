@@ -28,6 +28,8 @@ public static class Startup
     
     private static void AddRepositories(IServiceCollection services)
     {
+        // In this case we are just adding to a list with async method so makes sense to have singleton. If it were a
+        // real repository it should absolutely not be singleton. Use scoped/transient to avoid concurrency problems.
         services.AddSingleton<IPaymentsRepository, PaymentsRepository>();
     }
     

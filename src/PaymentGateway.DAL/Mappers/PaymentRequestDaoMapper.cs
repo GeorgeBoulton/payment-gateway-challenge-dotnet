@@ -6,8 +6,9 @@ namespace PaymentGateway.DAL.Mappers;
 public class PaymentRequestDaoMapper : IPaymentRequestDaoMapper
 {
     public PaymentRequestDao Map(PaymentRequest paymentRequest) =>
-        new(paymentRequest.CardNumber,
-            $"{paymentRequest:D2}/{paymentRequest.ExpiryYear}",
+        new(
+            paymentRequest.CardNumber,
+            $"{paymentRequest.ExpiryMonth:D2}/{paymentRequest.ExpiryYear}",
             paymentRequest.Currency,
             paymentRequest.Amount,
             paymentRequest.Cvv);
