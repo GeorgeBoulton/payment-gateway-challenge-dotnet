@@ -27,6 +27,7 @@
     <ProjectReference Include="..\..\src\PaymentGateway.DAL\PaymentGateway.DAL.csproj" />
     <ProjectReference Include="..\..\src\PaymentGateway.Shared\PaymentGateway.Shared.csproj" />
     <ProjectReference Include="..\..\src\PaymentGateway.Domain\PaymentGateway.Domain.csproj" />
+    <ProjectReference Include="..\PaymentGateway.Tests.Shared\PaymentGateway.Tests.Shared.csproj" />
   </ItemGroup>
 
 </Project>

@@ -7,8 +7,8 @@ using PaymentGateway.DAL.Clients;
 using PaymentGateway.DAL.DAOs;
 using PaymentGateway.DAL.Mappers;
 using PaymentGateway.DAL.Processors;
-using PaymentGateway.DAL.UnitTests.Helpers;
 using PaymentGateway.Domain.Entities;
+using PaymentGateway.Tests.Shared.Helpers;
 
 namespace PaymentGateway.DAL.UnitTests.Processors;
 

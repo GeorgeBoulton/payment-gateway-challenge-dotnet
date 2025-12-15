@@ -1,8 +1,8 @@
 using FluentAssertions;
 using PaymentGateway.DAL.Entities;
 using PaymentGateway.DAL.Mappers;
-using PaymentGateway.DAL.UnitTests.Helpers;
 using PaymentGateway.Domain.Entities;
+using PaymentGateway.Tests.Shared.Helpers;
 
 namespace PaymentGateway.DAL.UnitTests.Mappers;
 

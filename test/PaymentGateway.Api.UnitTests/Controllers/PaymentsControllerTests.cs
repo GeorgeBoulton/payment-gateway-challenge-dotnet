@@ -1,0 +1,114 @@
+using AutoFixture;
+
+using FluentAssertions;
+
+using Microsoft.AspNetCore.Http;
+using Microsoft.AspNetCore.Mvc;
+
+using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+
+using PaymentGateway.Api.Controllers;
+using PaymentGateway.Api.Mappers;
+using PaymentGateway.Api.Models.Requests;
+using PaymentGateway.Api.Models.Responses;
+using PaymentGateway.Domain.Entities;
+using PaymentGateway.Domain.Processors;
+using PaymentGateway.Domain.Services;
+using PaymentGateway.Shared.Exceptions;
+using PaymentGateway.Tests.Shared.Helpers;
+
+namespace PaymentGateway.Api.UnitTests.Controllers;
+
+[TestFixture]
+public class PaymentsControllerTests
+{
+    private readonly Fixture _fixture = new();
+    
+    private readonly IPaymentService _paymentService = Substitute.For<IPaymentService>();
+    private readonly IGetPaymentResponseMapper _getPaymentResponseMapper = Substitute.For<IGetPaymentResponseMapper>();
+    private readonly IPostPaymentResponseMapper _postPaymentResponseMapper = Substitute.For<IPostPaymentResponseMapper>();
+    private readonly IPaymentRequestMapper _paymentRequestMapper = Substitute.For<IPaymentRequestMapper>();
+
+    private PaymentsController _sut;
+
+    [SetUp]
+    public void SetUp()
+    {
+        _sut = new PaymentsController(
+            _paymentService,
+            _getPaymentResponseMapper,
+            _postPaymentResponseMapper,
+            _paymentRequestMapper);
+    }
+    
+    [TearDown]
+    public void TearDown()
+    {
+        (_sut as IDisposable).Dispose();
+    }
+    
+    [Test]
+    public async Task PostProcessPayment_GivenValidRequest_ReturnsOk()
+    {
+        // Arrange
+        var postRequest = _fixture.Create<PostPaymentRequest>();
+        var paymentRequest = ModelHelpers.CreatePaymentRequest();
+        var paymentResponse = _fixture.Create<Payment>();
+        var postResponse = _fixture.Create<PostPaymentResponse>();
+
+        _paymentRequestMapper.Map(postRequest).Returns(paymentRequest);
+        _paymentService.ProcessPaymentAsync(paymentRequest).Returns(paymentResponse);
+        _postPaymentResponseMapper.Map(paymentResponse).Returns(postResponse);
+
+        // Act
+        var result = await _sut.PostProcessPayment(postRequest);
+
+        // Assert
+        var ok = result.Should().BeOfType<OkObjectResult>().Subject;
+        ok.StatusCode.Should().Be(StatusCodes.Status200OK);
+        ok.Value.Should().BeEquivalentTo(postResponse);
+        // todo check body
+    }
+    
+    [Test]
+    public async Task PostProcessPayment_WhenBankUnavailableExceptionThrown_Returns503()
+    {
+        // Arrange
+        var request = _fixture.Create<PostPaymentRequest>();
+        var paymentRequest = ModelHelpers.CreatePaymentRequest();
+
+        _paymentRequestMapper.Map(request).Returns(paymentRequest);
+        _paymentService
+            .ProcessPaymentAsync(paymentRequest)
+            .ThrowsAsync(new BankUnavailableException("Down")); // in the case of 503
+
+        // Act
+        var result = await _sut.PostProcessPayment(request);
+
+        // Assert
+        var status = result.Should().BeOfType<ObjectResult>().Subject;
+        status.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
+    }
+    
+    [Test]
+    public async Task PostProcessPayment_WhenUnexpectedExceptionThrown_Returns500()
+    {
+        // Arrange
+        var request = _fixture.Create<PostPaymentRequest>();
+        var paymentRequest = ModelHelpers.CreatePaymentRequest();
+
+        _paymentRequestMapper.Map(request).Returns(paymentRequest);
+        _paymentService
+            .ProcessPaymentAsync(paymentRequest)
+            .ThrowsAsync(new Exception("Boom"));
+
+        // Act
+        var result = await _sut.PostProcessPayment(request);
+
+        // Assert
+        var status = result.Should().BeOfType<ObjectResult>().Subject;
+        status.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+    }
+    
+}

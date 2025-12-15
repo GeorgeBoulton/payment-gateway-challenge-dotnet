@@ -1,9 +1,10 @@
 using AutoFixture;
+
 using PaymentGateway.DAL.DAOs;
 using PaymentGateway.DAL.Entities;
 using PaymentGateway.Domain.Entities;
 
-namespace PaymentGateway.DAL.UnitTests.Helpers;
+namespace PaymentGateway.Tests.Shared.Helpers;
 
 public static class ModelHelpers
 {

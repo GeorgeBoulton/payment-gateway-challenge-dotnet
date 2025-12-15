@@ -2,6 +2,7 @@
 using PaymentGateway.Api.Mappers;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Domain.Services;
+using PaymentGateway.Shared.Exceptions;
 
 namespace PaymentGateway.Api.Controllers;
 
@@ -23,7 +24,7 @@ public class PaymentsController(
     }
     
     [HttpPost]
-    public async Task<IActionResult> ProcessPayment(PostPaymentRequest request)
+    public async Task<IActionResult> PostProcessPayment(PostPaymentRequest request)
     {
         if (!ModelState.IsValid)
         {
@@ -32,8 +33,21 @@ public class PaymentsController(
         
         var paymentRequest = paymentRequestMapper.Map(request);
         
-        var response = await paymentService.ProcessPaymentAsync(paymentRequest);
-        
-        return Ok(postPaymentResponseMapper.Map(response));
+        try
+        {
+            var response = await paymentService.ProcessPaymentAsync(paymentRequest);
+
+            return Ok(postPaymentResponseMapper.Map(response));
+        }
+        catch (BankUnavailableException)
+        {
+            return StatusCode(StatusCodes.Status503ServiceUnavailable,
+                new { Message = "Bank simulator is currently unavailable. Please try again later." });
+        }
+        catch (Exception)
+        {
+            return StatusCode(StatusCodes.Status500InternalServerError,
+                new { Message = "An unexpected error occurred. Please try again later." });
+        }
     }
 }
