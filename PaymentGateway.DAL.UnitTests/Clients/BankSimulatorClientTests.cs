@@ -1,8 +1,13 @@
+using System.Net;
+
 using AutoFixture;
 using FluentAssertions;
 using NSubstitute;
+using NSubstitute.ExceptionExtensions;
+
 using PaymentGateway.DAL.Clients;
 using PaymentGateway.DAL.DAOs;
+using PaymentGateway.Shared.Exceptions;
 
 namespace PaymentGateway.DAL.UnitTests.Clients;
 
@@ -71,5 +76,26 @@ public class BankSimulatorClientTests
         var expected = new PaymentResponseDao(false, null);
             
         result.Should().BeEquivalentTo(expected);
+    }
+    
+    [Test]
+    public async Task ProcessPaymentRequestAsync_GivenPaymentRequestAndClientThrowsException_ThrowsException()
+    {
+        // Arrange
+        var request = _fixture.Create<PaymentRequestDao>();
+        
+        _baseClient
+            .PostAsync<PaymentRequestDao, PaymentResponseDao>(
+                Arg.Is<Uri>(x => x.AbsoluteUri == "http://localhost:8080/payments"),
+                request)
+            .ThrowsAsync(new HttpRequestException(
+                "Service unavailable", null, HttpStatusCode.ServiceUnavailable));
+        
+        // Act & Assert
+        await FluentActions
+            .Invoking(() => _sut.ProcessPaymentRequestAsync(request))
+            .Should()
+            .ThrowAsync<BankUnavailableException>()
+            .WithMessage("Bank simulator returned 503.");
     }
 }
