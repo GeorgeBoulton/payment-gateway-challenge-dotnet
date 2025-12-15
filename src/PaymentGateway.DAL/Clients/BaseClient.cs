@@ -1,3 +1,4 @@
+using System.Text;
 using System.Text.Json;
 
 namespace PaymentGateway.DAL.Clients;
@@ -8,10 +9,13 @@ public class BaseClient(HttpClient httpClient) : IBaseClient
     {
         return await SendAsync<T>(HttpMethod.Get, uri);
     }
-
-    public async Task<T> PostAsync<T>(Uri uri, HttpContent httpContent)
+    
+    public async Task<TResponse> PostAsync<TRequest, TResponse>(Uri uri, TRequest request)
     {
-        return await SendAsync<T>(HttpMethod.Post, uri, httpContent);
+        var json = JsonSerializer.Serialize(request);
+        using var content = new StringContent(json, Encoding.UTF8, "application/json");
+
+        return await SendAsync<TResponse>(HttpMethod.Post, uri, content);
     }
 
     private async Task<T> SendAsync<T>(HttpMethod httpMethod, Uri uri, HttpContent? httpContent = null)

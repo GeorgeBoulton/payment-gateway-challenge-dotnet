@@ -1,6 +1,4 @@
 using System.Net;
-using System.Text;
-using System.Text.Json;
 using PaymentGateway.DAL.DAOs;
 using PaymentGateway.Shared.Exceptions;
 
@@ -16,19 +14,11 @@ public class BankSimulatorClient(IBaseClient baseClient) : IBankSimulatorClient
         {
             var requestUri = new Uri(new Uri(BaseUri), "/payments");
             
-            return await MakeRequest<PaymentResponseDao>(requestUri, JsonSerializer.Serialize(paymentRequestDao));
-
+            return await baseClient.PostAsync<PaymentRequestDao, PaymentResponseDao>(requestUri, paymentRequestDao);
         }
         catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.ServiceUnavailable)
         {
             throw new BankUnavailableException("Bank simulator returned 503.", e);
         }
-    }
-
-    private async Task<T> MakeRequest<T>(Uri requestUri, string requestBody)
-    {
-        using var content = new StringContent(requestBody, Encoding.UTF8, "application/json");
-
-        return await baseClient.PostAsync<T>(requestUri, content);
     }
 }
