@@ -20,6 +20,11 @@ public class PaymentsController(
     {
         var response = paymentService.GetPayment(id);
         
+        if (response is null)
+        {
+            return NotFound();
+        }
+        
         return Ok(getPaymentResponseMapper.Map(response));
     }
     
