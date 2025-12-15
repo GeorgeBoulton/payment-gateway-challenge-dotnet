@@ -68,5 +68,101 @@ public class PaymentServiceTests
         // Assert
         result.Should().BeNull();
     }
+    
+    [Test]
+    public async Task ProcessPaymentAsync_GivenExpiredCard_ReturnsRejectedPayment()
+    {
+        // Arrange
+        var request = ModelHelpers.CreatePaymentRequest(
+            expiryMonth: 11,
+            expiryYear: 2025);
+
+        // Act
+        var result = await _sut.ProcessPaymentAsync(request);
+
+        // Assert
+        result.Status.Should().Be("Rejected");
+        result.CardNumber.Should().EndWith(request.CardNumber[^4..]);
+
+        await _paymentProcessor
+            .DidNotReceive()
+            .ProcessPayment(Arg.Any<PaymentRequest>());
+
+        _paymentDataProcessor
+            .DidNotReceive()
+            .StorePayment(Arg.Any<Payment>());
+    }
+    
+    [Test]
+    public async Task ProcessPaymentAsync_GivenUnsupportedCurrency_ReturnsRejectedPayment()
+    {
+        // Arrange
+        var request = ModelHelpers.CreatePaymentRequest(currency: "AUD");
+
+        // Act
+        var result = await _sut.ProcessPaymentAsync(request);
+
+        // Assert
+        result.Status.Should().Be("Rejected");
+
+        await _paymentProcessor
+            .DidNotReceive()
+            .ProcessPayment(Arg.Any<PaymentRequest>());
+
+        _paymentDataProcessor
+            .DidNotReceive()
+            .StorePayment(Arg.Any<Payment>());
+    }
+
+    [Test]
+    public async Task ProcessPaymentAsync_WhenBankAuthorizes_ReturnsAuthorizedPayment()
+    {
+        // Arrange
+        var authCode = _fixture.Create<string>();
+        var request = ModelHelpers.CreatePaymentRequest(currency: "GBP");
+        var response = new PaymentResponse(true, authCode);
+
+        _paymentProcessor
+            .ProcessPayment(request)
+            .Returns(response);
+
+        // Act
+        var result = await _sut.ProcessPaymentAsync(request);
+
+        // Assert
+        result.Status.Should().Be("Authorized");
+        result.AuthorizationCode.Should().Be(authCode);
+        result.CardNumber.Should().Be($"**** **** **** {request.CardNumber[^4..]}");
+
+        _paymentDataProcessor
+            .Received(1)
+            .StorePayment(Arg.Is<Payment>(p =>
+                p.Status == "Authorized" &&
+                p.AuthorizationCode == authCode));
+    }
+
+    [Test]
+    public async Task ProcessPaymentAsync_WhenBankDeclines_ReturnsDeclinedPayment()
+    {
+        // Arrange
+        var request = ModelHelpers.CreatePaymentRequest(currency: "USD");
+        var response = new PaymentResponse(false, null);
+
+        _paymentProcessor
+            .ProcessPayment(request)
+            .Returns(response);
+
+        // Act
+        var result = await _sut.ProcessPaymentAsync(request);
+
+        // Assert
+        result.Status.Should().Be("Declined");
+
+        _paymentDataProcessor
+            .Received(1)
+            .StorePayment(Arg.Is<Payment>(p =>
+                p.Status == "Declined"));
+    }
+
 
 }

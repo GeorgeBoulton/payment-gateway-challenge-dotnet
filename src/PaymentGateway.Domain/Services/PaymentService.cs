@@ -7,6 +7,8 @@ public class PaymentService(
     IPaymentProcessor paymentProcessor,
     IPaymentDataProcessor paymentDataProcessor) : IPaymentService
 {
+    private static readonly string[] _approvedCurrencies = ["GBP", "EUR", "USD"];
+    
     public Payment? GetPayment(Guid id)
     {
         var payment = paymentDataProcessor.RetrievePayment(id);
@@ -67,7 +69,7 @@ public class PaymentService(
 
     private static bool IsExpiryInFuture(int expiryMonth, int expiryYear)
     {
-        // First day of the month AFTER the expiry month
+        // First day of the month after the expiry month
         var expiryDate = new DateOnly(expiryYear, expiryMonth, 1)
             .AddMonths(1);
 
@@ -76,10 +78,7 @@ public class PaymentService(
 
     private static bool IsCurrencyApproved(string currencyCode)
     {
-        var approvedCurrencies = new[] { "GBP", "EUR", "USD" };
-            // todo get this from config
-        
-        if (approvedCurrencies.Contains(currencyCode))
+        if (_approvedCurrencies.Contains(currencyCode))
         {
             return true;
         }
