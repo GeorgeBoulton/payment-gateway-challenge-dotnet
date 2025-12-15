@@ -37,6 +37,9 @@ public class BaseClient(HttpClient httpClient) : IBaseClient
         }
 
         // Handle non-success status codes as needed
-        throw new HttpRequestException($"Request to {uri} failed with status code {response.StatusCode}");
+        throw new HttpRequestException(
+            $"Request to {uri} failed with status code {response.StatusCode}",
+            null,
+            response.StatusCode);
     }
 }
