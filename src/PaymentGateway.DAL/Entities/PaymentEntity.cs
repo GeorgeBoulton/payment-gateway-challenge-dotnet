@@ -1,5 +1,3 @@
-using PaymentGateway.Domain.Entities;
-
 namespace PaymentGateway.DAL.Entities;
 
 public record PaymentEntity(

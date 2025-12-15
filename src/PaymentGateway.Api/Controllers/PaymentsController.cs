@@ -1,5 +1,4 @@
 ﻿using Microsoft.AspNetCore.Mvc;
-
 using PaymentGateway.Api.Mappers;
 using PaymentGateway.Api.Models.Requests;
 using PaymentGateway.Domain.Services;

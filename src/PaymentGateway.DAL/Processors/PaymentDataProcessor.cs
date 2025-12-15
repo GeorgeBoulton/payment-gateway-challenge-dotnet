@@ -1,4 +1,3 @@
-using PaymentGateway.DAL.Entities;
 using PaymentGateway.DAL.Mappers;
 using PaymentGateway.DAL.Repositories;
 using PaymentGateway.Domain.Entities;
