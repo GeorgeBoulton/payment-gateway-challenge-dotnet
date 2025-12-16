@@ -2,6 +2,8 @@ using AutoFixture;
 
 using FluentAssertions;
 
+using Microsoft.Extensions.Logging;
+
 using NSubstitute;
 
 using PaymentGateway.DAL.Entities;
@@ -9,6 +11,7 @@ using PaymentGateway.DAL.Mappers;
 using PaymentGateway.DAL.Processors;
 using PaymentGateway.DAL.Repositories;
 using PaymentGateway.Domain.Entities;
+using PaymentGateway.Tests.Shared.Extensions;
 using PaymentGateway.Tests.Shared.Helpers;
 
 namespace PaymentGateway.DAL.UnitTests.Processors;
@@ -20,13 +23,14 @@ public class PaymentDataProcessorTests
     
     private readonly IPaymentsRepository _paymentsRepository = Substitute.For<IPaymentsRepository>();
     private readonly IPaymentMapper _paymentMapper  = Substitute.For<IPaymentMapper>();
+    private readonly ILogger<PaymentDataProcessor> _logger = Substitute.For<ILogger<PaymentDataProcessor>>();
     
     private PaymentDataProcessor _sut;
 
     [SetUp]
     public void SetUp()
     {
-        _sut = new PaymentDataProcessor(_paymentsRepository, _paymentMapper);
+        _sut = new PaymentDataProcessor(_paymentsRepository, _paymentMapper, _logger);
     }
 
     [Test]
@@ -44,20 +48,16 @@ public class PaymentDataProcessorTests
         // Assert
         _paymentMapper.Received(1).Map(payment);
         _paymentsRepository.Received(1).Add(paymentEntity);
+        _logger.ReceivedLog(LogLevel.Information, $"Payment stored with Id: {paymentEntity.Id}");
     }
 
-    [Ignore("Masking is happening in the domain")]
-    [TestCase("4758 3644 1283 2839", "**** **** **** 2839")]
-    [TestCase("1234567898765432"   , "**** **** **** 5432")]
-    [TestCase("4000 11112222 3333" , "**** **** **** 3333")]
-    [TestCase("457364826738 3324"  , "**** **** **** 3324")]
-    [TestCase("4340 111573927773"  , "**** **** **** 7773")]
-    public void RetrievePayment_GivenPaymentId_ReturnsMaskedPaymentForAllFormat(string cardNumber, string expectedMasked)
+    [Test]
+    public void RetrievePayment_GivenPaymentId_ReturnsPayment()
     {
         // Arrange
         var paymentId = Guid.NewGuid();
-        var paymentEntity = ModelHelpers.CreatePaymentEntity(cardNumber: cardNumber);
-        var payment = ModelHelpers.CreatePayment(cardNumber: cardNumber);
+        var paymentEntity = ModelHelpers.CreatePaymentEntity();
+        var payment = ModelHelpers.CreatePayment();
 
         _paymentsRepository.Get(paymentId).Returns(paymentEntity);
         _paymentMapper.Map(paymentEntity).Returns(payment);
@@ -68,21 +68,22 @@ public class PaymentDataProcessorTests
         // Assert
         _paymentsRepository.Received(1).Get(paymentId);
         _paymentMapper.Received(1).Map(paymentEntity);
-        result.Should().BeEquivalentTo(payment, options => options
-            .Excluding(p => p.CardNumber));
-        result.CardNumber.Should().BeEquivalentTo(expectedMasked);
+        result.Should().BeEquivalentTo(payment);
     }
 
-    [Test] public void RetrievePayment_GivenPaymentDoesNotExist_ReturnsNull()
+    [Test] 
+    public void RetrievePayment_GivenPaymentDoesNotExist_ReturnsNull()
     {
         // Arrange
+        var paymentGuid = Guid.NewGuid();
         var payment = _fixture.Create<Payment>();
         
         // Act
-        var result = _sut.RetrievePayment(Guid.NewGuid());
+        var result = _sut.RetrievePayment(paymentGuid);
         
         // Assert
         _paymentMapper.Received(0).Map(payment);
+        _logger.ReceivedLog(LogLevel.Information,$"No payment found matching Id: {paymentGuid}");
         result.Should().BeNull();
     }
 }

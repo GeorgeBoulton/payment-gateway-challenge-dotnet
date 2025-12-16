@@ -4,6 +4,7 @@ using FluentAssertions;
 
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.Extensions.Logging;
 
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
@@ -15,6 +16,7 @@ using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Domain.Entities;
 using PaymentGateway.Domain.Services;
 using PaymentGateway.Shared.Exceptions;
+using PaymentGateway.Tests.Shared.Extensions;
 using PaymentGateway.Tests.Shared.Helpers;
 
 namespace PaymentGateway.Api.UnitTests.Controllers;
@@ -28,7 +30,9 @@ public class PaymentsControllerTests
     private readonly IGetPaymentResponseMapper _getPaymentResponseMapper = Substitute.For<IGetPaymentResponseMapper>();
     private readonly IPostPaymentResponseMapper _postPaymentResponseMapper = Substitute.For<IPostPaymentResponseMapper>();
     private readonly IPaymentRequestMapper _paymentRequestMapper = Substitute.For<IPaymentRequestMapper>();
-
+    private readonly ILogger<PaymentsController> _logger = Substitute.For<ILogger<PaymentsController>>();
+    
+    
     private PaymentsController _sut;
 
     [SetUp]
@@ -38,7 +42,8 @@ public class PaymentsControllerTests
             _paymentService,
             _getPaymentResponseMapper,
             _postPaymentResponseMapper,
-            _paymentRequestMapper);
+            _paymentRequestMapper,
+            _logger);
     }
     
     [TearDown]
@@ -79,7 +84,7 @@ public class PaymentsControllerTests
         var result = await _sut.GetPayment(id);
 
         // Assert
-        result.Should().BeOfType<NotFoundResult>();
+        result.Should().BeOfType<NotFoundObjectResult>();
         // todo check message
     }
     
@@ -107,7 +112,7 @@ public class PaymentsControllerTests
     }
     
     [Test]
-    public async Task PostProcessPayment_WhenBankUnavailableExceptionThrown_Returns503()
+    public async Task PostProcessPayment_WhenBankUnavailableExceptionThrown_Returns502()
     {
         // Arrange
         var request = _fixture.Create<PostPaymentRequest>();
@@ -116,27 +121,30 @@ public class PaymentsControllerTests
         _paymentRequestMapper.Map(request).Returns(paymentRequest);
         _paymentService
             .ProcessPaymentAsync(paymentRequest)
-            .ThrowsAsync(new BankUnavailableException("Down")); // in the case of 503
+            .ThrowsAsync(new BankUnavailableException("Down")); // in the case of 502
 
         // Act
         var result = await _sut.PostProcessPayment(request);
 
         // Assert
         var status = result.Should().BeOfType<ObjectResult>().Subject;
-        status.StatusCode.Should().Be(StatusCodes.Status503ServiceUnavailable);
+        status.StatusCode.Should().Be(StatusCodes.Status502BadGateway);
+        _logger.ReceivedLog(LogLevel.Error, $"Bank simulator is unavailable. Returning {StatusCodes.Status502BadGateway}");
     }
     
+    // This should never ever happen, but we'll test for it anyway
     [Test]
     public async Task PostProcessPayment_WhenUnexpectedExceptionThrown_Returns500()
     {
         // Arrange
         var request = _fixture.Create<PostPaymentRequest>();
         var paymentRequest = ModelHelpers.CreatePaymentRequest();
+        var exceptionMessage = "Disaster";
 
         _paymentRequestMapper.Map(request).Returns(paymentRequest);
         _paymentService
             .ProcessPaymentAsync(paymentRequest)
-            .ThrowsAsync(new Exception("Boom"));
+            .ThrowsAsync(new Exception(exceptionMessage));
 
         // Act
         var result = await _sut.PostProcessPayment(request);
@@ -144,6 +152,7 @@ public class PaymentsControllerTests
         // Assert
         var status = result.Should().BeOfType<ObjectResult>().Subject;
         status.StatusCode.Should().Be(StatusCodes.Status500InternalServerError);
+        _logger.ReceivedLog(LogLevel.Critical, $"Unexpected exception occurred: {exceptionMessage}");
     }
     
 }

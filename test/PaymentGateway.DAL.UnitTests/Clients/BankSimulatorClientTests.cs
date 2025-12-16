@@ -1,11 +1,15 @@
 using System.Net;
 using AutoFixture;
 using FluentAssertions;
+
+using Microsoft.Extensions.Logging;
+
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using PaymentGateway.DAL.Clients;
 using PaymentGateway.DAL.DAOs;
 using PaymentGateway.Shared.Exceptions;
+using PaymentGateway.Tests.Shared.Extensions;
 
 namespace PaymentGateway.DAL.UnitTests.Clients;
 
@@ -15,13 +19,14 @@ public class BankSimulatorClientTests
     private readonly Fixture _fixture = new();
         
     private readonly IBaseClient _baseClient = Substitute.For<IBaseClient>();
+    private readonly ILogger<BankSimulatorClient> _logger = Substitute.For<ILogger<BankSimulatorClient>>();
 
     private BankSimulatorClient _sut;
 
     [SetUp]
     public void SetUp()
     {
-        _sut = new BankSimulatorClient(_baseClient);
+        _sut = new BankSimulatorClient(_baseClient, _logger);
     }
     
     [Test]
@@ -47,6 +52,7 @@ public class BankSimulatorClientTests
         // Assert
         var expected = new PaymentResponseDao(true, authorizationCode);
             
+        _logger.ReceivedLog(LogLevel.Information, $"Payment processed by bank for card ending in: {request.CardNumber[^4..]}");
         result.Should().BeEquivalentTo(expected);
     }
     
@@ -71,7 +77,8 @@ public class BankSimulatorClientTests
             
         // Assert
         var expected = new PaymentResponseDao(false, null);
-            
+        
+        _logger.ReceivedLog(LogLevel.Information, $"Payment processed by bank for card ending in: {request.CardNumber[^4..]}");
         result.Should().BeEquivalentTo(expected);
     }
     
@@ -93,6 +100,10 @@ public class BankSimulatorClientTests
             .Invoking(() => _sut.ProcessPaymentRequestAsync(request))
             .Should()
             .ThrowAsync<BankUnavailableException>()
-            .WithMessage("Bank simulator returned 503.");
+            .WithMessage("Bank simulator returned ServiceUnavailable.");
+
+        _logger.ReceivedLog(
+            LogLevel.Error,
+            $"ServiceUnavailable: Upstream service bank simulator unavailable. No payment processed for card ending in: {request.CardNumber[^4..]}");
     }
 }

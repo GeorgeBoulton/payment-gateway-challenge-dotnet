@@ -1,10 +1,15 @@
 using System.Net;
+
+using Microsoft.Extensions.Logging;
+
 using PaymentGateway.DAL.DAOs;
 using PaymentGateway.Shared.Exceptions;
 
 namespace PaymentGateway.DAL.Clients;
 
-public class BankSimulatorClient(IBaseClient baseClient) : IBankSimulatorClient
+public class BankSimulatorClient(
+    IBaseClient baseClient,
+    ILogger<BankSimulatorClient> logger) : IBankSimulatorClient
 {
     private const string BaseUri = "http://localhost:8080";
 
@@ -14,11 +19,15 @@ public class BankSimulatorClient(IBaseClient baseClient) : IBankSimulatorClient
         {
             var requestUri = new Uri(new Uri(BaseUri), "/payments");
             
-            return await baseClient.PostAsync<PaymentRequestDao, PaymentResponseDao>(requestUri, paymentRequestDao);
+            var postResponse = await baseClient.PostAsync<PaymentRequestDao, PaymentResponseDao>(requestUri, paymentRequestDao);
+            logger.LogInformation("Payment processed by bank for card ending in: {Last4}", paymentRequestDao.CardNumber[^4..]);
+
+            return postResponse;
         }
         catch (HttpRequestException e) when (e.StatusCode == HttpStatusCode.ServiceUnavailable)
         {
-            throw new BankUnavailableException("Bank simulator returned 503.", e);
+            logger.LogError(e, "{StatusCode}: Upstream service bank simulator unavailable. No payment processed for card ending in: {Last4}", e.StatusCode, paymentRequestDao.CardNumber[^4..]);
+            throw new BankUnavailableException($"Bank simulator returned {e.StatusCode}.", e);
         }
     }
 }

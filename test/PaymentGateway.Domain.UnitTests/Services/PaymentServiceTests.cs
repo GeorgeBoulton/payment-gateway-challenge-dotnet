@@ -1,14 +1,12 @@
 using AutoFixture;
-
 using FluentAssertions;
-
+using Microsoft.Extensions.Logging;
 using NSubstitute;
-
-using PaymentGateway.DAL.Entities;
 using PaymentGateway.Domain.Entities;
 using PaymentGateway.Domain.Factories;
 using PaymentGateway.Domain.Processors;
 using PaymentGateway.Domain.Services;
+using PaymentGateway.Tests.Shared.Extensions;
 using PaymentGateway.Tests.Shared.Helpers;
 
 namespace PaymentGateway.Domain.UnitTests.Services;
@@ -22,7 +20,8 @@ public class PaymentServiceTests
     private readonly IPaymentDataProcessor _paymentDataProcessor = Substitute.For<IPaymentDataProcessor>();
     private readonly IPaymentValidator _paymentValidator = Substitute.For<IPaymentValidator>();
     private readonly IPaymentFactory _paymentFactory = Substitute.For<IPaymentFactory>();
-
+    private readonly ILogger<PaymentService> _logger = Substitute.For<ILogger<PaymentService>>();
+    
     private PaymentService _sut;
 
     [SetUp]
@@ -32,7 +31,8 @@ public class PaymentServiceTests
             _paymentProcessor,
             _paymentDataProcessor,
             _paymentValidator,
-            _paymentFactory);
+            _paymentFactory,
+            _logger);
     }
 
     [Test]
@@ -113,7 +113,7 @@ public class PaymentServiceTests
         // Arrange
         var request = ModelHelpers.CreatePaymentRequest();
         var response = new PaymentResponse(authorized, authorized ? _fixture.Create<string>() : null);
-        var factoryPayment = ModelHelpers.CreatePayment(cardNumber: request.CardNumber);
+        var factoryPayment = ModelHelpers.CreatePayment(cardNumber: request.CardNumber, status: authorized ? PaymentStatus.Authorized : PaymentStatus.Declined);
 
         _paymentValidator.IsPaymentValid(request).Returns(true);
         _paymentProcessor
@@ -138,5 +138,7 @@ public class PaymentServiceTests
         _paymentFactory
             .Received(1)
             .CreateFromResponse(Arg.Any<Guid>(), request, response);
+        
+        _logger.ReceivedLog(LogLevel.Information, $"Payment has been successfully processed. It was {factoryPayment.Status} and stored with Id: {factoryPayment.Id}");
     }
 }

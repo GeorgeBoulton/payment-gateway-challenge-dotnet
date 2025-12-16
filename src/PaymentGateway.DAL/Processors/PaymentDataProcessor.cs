@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 using PaymentGateway.DAL.Mappers;
 using PaymentGateway.DAL.Repositories;
 using PaymentGateway.Domain.Entities;
@@ -9,18 +11,28 @@ namespace PaymentGateway.DAL.Processors;
 // to split up read and write.
 public class PaymentDataProcessor(
     IPaymentsRepository paymentsRepository,
-    IPaymentMapper paymentMapper) : IPaymentDataProcessor
+    IPaymentMapper paymentMapper,
+    ILogger<PaymentDataProcessor> logger) : IPaymentDataProcessor
 {
     public void StorePayment(Payment payment)
     {
         var paymentEntity = paymentMapper.Map(payment);
         paymentsRepository.Add(paymentEntity);
+        
+        logger.LogInformation("Payment stored with Id: {PaymentId}", paymentEntity.Id);
     }
 
     public Payment? RetrievePayment(Guid id)
     {
         var paymentEntity = paymentsRepository.Get(id);
 
-        return paymentEntity is not null ? paymentMapper.Map(paymentEntity) : null; 
+        if (paymentEntity is not null)
+        {
+            return paymentMapper.Map(paymentEntity);
+        }
+
+        logger.LogInformation("No payment found matching Id: {PaymentId}", id);
+
+        return null;
     }
 }

@@ -1,3 +1,5 @@
+using Microsoft.Extensions.Logging;
+
 using PaymentGateway.Domain.Entities;
 using PaymentGateway.Domain.Factories;
 using PaymentGateway.Domain.Processors;
@@ -8,7 +10,8 @@ public class PaymentService(
     IPaymentProcessor paymentProcessor,
     IPaymentDataProcessor paymentDataProcessor,
     IPaymentValidator paymentValidator,
-    IPaymentFactory paymentFactory) : IPaymentService
+    IPaymentFactory paymentFactory,
+    ILogger<PaymentService> logger) : IPaymentService
 {
     public Payment? GetPayment(Guid id)
     {
@@ -31,6 +34,8 @@ public class PaymentService(
         var payment = paymentFactory.CreateFromResponse(paymentId, paymentRequest, paymentResponse);
         
         paymentDataProcessor.StorePayment(payment);
+        
+        logger.LogInformation("Payment has been successfully processed. It was {Authorized} and stored with Id: {PaymentId}",payment.Status, payment.Id);
         
         return MaskCardNumber(payment);
     }

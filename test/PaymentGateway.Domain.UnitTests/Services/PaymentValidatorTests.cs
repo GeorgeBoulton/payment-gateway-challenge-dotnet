@@ -1,5 +1,8 @@
 using FluentAssertions;
+using Microsoft.Extensions.Logging;
+using NSubstitute;
 using PaymentGateway.Domain.Services;
+using PaymentGateway.Tests.Shared.Extensions;
 using PaymentGateway.Tests.Shared.Helpers;
 
 namespace PaymentGateway.Domain.UnitTests.Services;
@@ -7,7 +10,15 @@ namespace PaymentGateway.Domain.UnitTests.Services;
 [TestFixture]
     public class PaymentValidatorTests
     {
-        private readonly PaymentValidator _sut = new();
+        private readonly ILogger<PaymentValidator> _logger = Substitute.For<ILogger<PaymentValidator>>();
+            
+        private PaymentValidator _sut;
+        
+        [SetUp]
+        public void SetUp()
+        {
+            _sut = new PaymentValidator(_logger);
+        }
 
         [Test]
         public void IsPaymentValid_ApprovedCurrencyAndExpiryInPast_ReturnsFalse()
@@ -23,6 +34,7 @@ namespace PaymentGateway.Domain.UnitTests.Services;
 
             // Assert
             result.Should().BeFalse();
+            _logger.ReceivedLog(LogLevel.Warning, $"Card has expired. Payment will be rejected for card ending in: {request.CardNumber[^4..]}");
         }
 
         [Test]
@@ -67,6 +79,7 @@ namespace PaymentGateway.Domain.UnitTests.Services;
             var result = _sut.IsPaymentValid(request);
 
             result.Should().BeFalse();
+            _logger.ReceivedLog(LogLevel.Warning, $"Currency is not approved. Payment will be rejected for card ending in: {request.CardNumber[^4..]}");
         }
 
         [Test]
@@ -80,5 +93,7 @@ namespace PaymentGateway.Domain.UnitTests.Services;
             var result = _sut.IsPaymentValid(request);
 
             result.Should().BeFalse();
+            _logger.ReceivedLog(LogLevel.Warning, $"Card has expired. Payment will be rejected for card ending in: {request.CardNumber[^4..]}");
+            _logger.ReceivedLog(LogLevel.Warning, $"Currency is not approved. Payment will be rejected for card ending in: {request.CardNumber[^4..]}");
         }
     }
