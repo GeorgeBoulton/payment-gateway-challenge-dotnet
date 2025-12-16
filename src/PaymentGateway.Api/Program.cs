@@ -14,16 +14,19 @@ builder.Services.AddControllers().AddJsonOptions(options =>
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
-// Add logging
+// Add logging.
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
 
-// Add some basic injectable config
+// Add some basic injectable config. provided validation for URI.
 builder.Services
     .AddOptions<PaymentGatewayOptions>()
     .BindConfiguration(PaymentGatewayOptions.SectionName)
     .ValidateDataAnnotations()
+    .Validate(o =>
+            Uri.IsWellFormedUriString(o.BankBaseUrl, UriKind.Absolute),
+        "BankSimulator:BaseUri must be a valid absolute URI")
     .ValidateOnStart();
 
 builder.Services.AddServices();
