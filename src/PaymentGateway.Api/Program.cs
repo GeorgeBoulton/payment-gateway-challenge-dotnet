@@ -1,5 +1,6 @@
 using System.Text.Json.Serialization;
 using PaymentGateway.Api;
+using PaymentGateway.Config;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -17,6 +18,13 @@ builder.Services.AddSwaggerGen();
 builder.Logging.ClearProviders();
 builder.Logging.AddConsole();
 builder.Logging.AddDebug();
+
+// Add some basic injectable config
+builder.Services
+    .AddOptions<PaymentGatewayOptions>()
+    .BindConfiguration(PaymentGatewayOptions.SectionName)
+    .ValidateDataAnnotations()
+    .ValidateOnStart();
 
 builder.Services.AddServices();
 

@@ -1,5 +1,8 @@
 using System.Net;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+using PaymentGateway.Config;
 using PaymentGateway.DAL.DAOs;
 using PaymentGateway.Shared.Exceptions;
 
@@ -7,15 +10,14 @@ namespace PaymentGateway.DAL.Clients;
 
 public class BankSimulatorClient(
     IBaseClient baseClient,
+    IOptions<PaymentGatewayOptions> options,
     ILogger<BankSimulatorClient> logger) : IBankSimulatorClient
 {
-    private const string BaseUri = "http://localhost:8080";
-
     public async Task<PaymentResponseDao> ProcessPaymentRequestAsync(PaymentRequestDao paymentRequestDao)
     {
         try
         {
-            var requestUri = new Uri(new Uri(BaseUri), "/payments");
+            var requestUri = new Uri(new Uri(options.Value.BankBaseUrl), "/payments");
             
             var postResponse = await baseClient.PostAsync<PaymentRequestDao, PaymentResponseDao>(requestUri, paymentRequestDao);
             logger.LogInformation("Payment processed by bank for card ending in: {Last4}", paymentRequestDao.CardNumber[^4..]);

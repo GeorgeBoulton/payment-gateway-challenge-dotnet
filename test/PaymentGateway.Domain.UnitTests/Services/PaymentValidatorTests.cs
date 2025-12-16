@@ -1,6 +1,10 @@
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
 using NSubstitute;
+
+using PaymentGateway.Config;
 using PaymentGateway.Domain.Services;
 using PaymentGateway.Tests.Shared.Extensions;
 using PaymentGateway.Tests.Shared.Helpers;
@@ -11,13 +15,15 @@ namespace PaymentGateway.Domain.UnitTests.Services;
     public class PaymentValidatorTests
     {
         private readonly ILogger<PaymentValidator> _logger = Substitute.For<ILogger<PaymentValidator>>();
-            
+        private readonly IOptions<PaymentGatewayOptions> _options = Substitute.For<IOptions<PaymentGatewayOptions>>();
+        
         private PaymentValidator _sut;
         
         [SetUp]
         public void SetUp()
         {
-            _sut = new PaymentValidator(_logger);
+            _options.Value.Returns(new PaymentGatewayOptions { ApprovedCurrencies = ["GBP", "EUR", "USD"] });
+            _sut = new PaymentValidator(_options, _logger);
         }
 
         [Test]

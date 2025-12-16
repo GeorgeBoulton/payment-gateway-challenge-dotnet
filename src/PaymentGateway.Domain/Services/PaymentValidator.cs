@@ -1,13 +1,15 @@
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
+using PaymentGateway.Config;
 using PaymentGateway.Domain.Entities;
 
 namespace PaymentGateway.Domain.Services;
 
-public class PaymentValidator(ILogger<PaymentValidator> logger) : IPaymentValidator
+public class PaymentValidator(
+    IOptions<PaymentGatewayOptions> configuration,
+    ILogger<PaymentValidator> logger) : IPaymentValidator
 {
-    // Hashset has O(1) lookup
-    private static readonly HashSet<string> ApprovedCurrencies = ["GBP", "EUR", "USD"];
-    
     public bool IsPaymentValid(PaymentRequest paymentRequest)
     {
         var expiryInFuture = IsExpiryInFuture(paymentRequest.ExpiryMonth, paymentRequest.ExpiryYear);
@@ -27,8 +29,8 @@ public class PaymentValidator(ILogger<PaymentValidator> logger) : IPaymentValida
         return expiryDate > DateOnly.FromDateTime(DateTime.UtcNow);
     }
     
-    private static bool IsCurrencyApproved(string currencyCode)
+    private bool IsCurrencyApproved(string currencyCode)
     {
-        return ApprovedCurrencies.Contains(currencyCode);
+        return configuration.Value.ApprovedCurrencies.Contains(currencyCode);
     }
 }

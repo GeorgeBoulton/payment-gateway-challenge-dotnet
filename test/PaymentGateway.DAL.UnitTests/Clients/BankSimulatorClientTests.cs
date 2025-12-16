@@ -2,8 +2,12 @@ using System.Net;
 using AutoFixture;
 using FluentAssertions;
 using Microsoft.Extensions.Logging;
+using Microsoft.Extensions.Options;
+
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
+
+using PaymentGateway.Config;
 using PaymentGateway.DAL.Clients;
 using PaymentGateway.DAL.DAOs;
 using PaymentGateway.Shared.Exceptions;
@@ -17,6 +21,7 @@ public class BankSimulatorClientTests
     private readonly Fixture _fixture = new();
         
     private readonly IBaseClient _baseClient = Substitute.For<IBaseClient>();
+    private readonly IOptions<PaymentGatewayOptions> _options = Substitute.For<IOptions<PaymentGatewayOptions>>();
     private readonly ILogger<BankSimulatorClient> _logger = Substitute.For<ILogger<BankSimulatorClient>>();
 
     private BankSimulatorClient _sut;
@@ -24,7 +29,8 @@ public class BankSimulatorClientTests
     [SetUp]
     public void SetUp()
     {
-        _sut = new BankSimulatorClient(_baseClient, _logger);
+        _options.Value.Returns(new PaymentGatewayOptions { BankBaseUrl = "http://localhost:8080" });
+        _sut = new BankSimulatorClient(_baseClient, _options, _logger);
     }
     
     [Test]
@@ -40,7 +46,7 @@ public class BankSimulatorClientTests
         
         _baseClient
             .PostAsync<PaymentRequestDao, PaymentResponseDao>(
-                Arg.Is<Uri>(x => x.AbsoluteUri == "http://localhost:8080/payments"),
+                Arg.Is<Uri>(x => x.AbsoluteUri == $"{_options.Value.BankBaseUrl}/payments"),
                 request)
             .Returns(Task.FromResult(paymentResponse));
         
@@ -66,7 +72,7 @@ public class BankSimulatorClientTests
         
         _baseClient
             .PostAsync<PaymentRequestDao, PaymentResponseDao>(
-                Arg.Is<Uri>(x => x.AbsoluteUri == "http://localhost:8080/payments"),
+                Arg.Is<Uri>(x => x.AbsoluteUri == $"{_options.Value.BankBaseUrl}/payments"),
                 request)
             .Returns(Task.FromResult(paymentResponse));
         
@@ -88,7 +94,7 @@ public class BankSimulatorClientTests
         
         _baseClient
             .PostAsync<PaymentRequestDao, PaymentResponseDao>(
-                Arg.Is<Uri>(x => x.AbsoluteUri == "http://localhost:8080/payments"),
+                Arg.Is<Uri>(x => x.AbsoluteUri == $"{_options.Value.BankBaseUrl}/payments"),
                 request)
             .ThrowsAsync(new HttpRequestException(
                 "Service unavailable", null, HttpStatusCode.ServiceUnavailable));
