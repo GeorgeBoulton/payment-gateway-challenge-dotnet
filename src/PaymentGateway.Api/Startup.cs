@@ -17,6 +17,7 @@ public static class Startup
         services.AddSingleton<IPaymentRequestMapper, PaymentRequestMapper>();
         services.AddSingleton<IGetPaymentResponseMapper, GetPaymentResponseMapper>();
         services.AddSingleton<IPostPaymentResponseMapper, PostPaymentResponseMapper>();
+        services.AddSingleton<IPaymentStatusMapper, PaymentStatusMapper>();
     }
 
 }

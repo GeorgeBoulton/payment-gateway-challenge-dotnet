@@ -7,5 +7,5 @@ public record Payment(
     int ExpiryYear,
     string Currency,
     int Amount,
-    string Status,
+    PaymentStatus Status,
     string? AuthorizationCode = null);

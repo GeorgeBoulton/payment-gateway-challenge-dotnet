@@ -4,12 +4,12 @@ using PaymentGateway.Domain.Entities;
 
 namespace PaymentGateway.Api.Mappers;
 
-public class PostPaymentResponseMapper : IPostPaymentResponseMapper
+public class PostPaymentResponseMapper(IPaymentStatusMapper paymentStatusMapper) : IPostPaymentResponseMapper
 {
     public PostPaymentResponse Map(Payment payment) =>
         new(
             payment.Id,
-            Enum.Parse<PaymentStatus>(payment.Status),
+            paymentStatusMapper.Map(payment.Status),
             payment.CardNumber,
             payment.ExpiryMonth,
             payment.ExpiryYear,

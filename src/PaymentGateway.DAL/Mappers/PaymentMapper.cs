@@ -3,12 +3,12 @@ using PaymentGateway.Domain.Entities;
 
 namespace PaymentGateway.DAL.Mappers;
 
-public class PaymentMapper : IPaymentMapper
+public class PaymentMapper(IStatusMapper statusMapper) : IPaymentMapper
 {
     public PaymentEntity Map(Payment payment) =>
         new(
             payment.Id,
-            Enum.Parse<Status>(payment.Status),
+            statusMapper.Map(payment.Status),
             payment.CardNumber,
             payment.ExpiryMonth,
             payment.ExpiryYear,
@@ -25,6 +25,6 @@ public class PaymentMapper : IPaymentMapper
             payment.ExpiryYear, 
             payment.Currency,
             payment.Amount, 
-            payment.Status.ToString(), 
+            statusMapper.Map(payment.Status), 
             payment.AuthorizationCode ?? null);
 }

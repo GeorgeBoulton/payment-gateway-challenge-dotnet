@@ -44,5 +44,6 @@ public static class Startup
         services.AddSingleton<IPaymentMapper, PaymentMapper>();
         services.AddSingleton<IPaymentRequestDaoMapper, PaymentRequestDaoMapper>();
         services.AddSingleton<IPaymentResponseMapper, PaymentResponseMapper>();
+        services.AddSingleton<IStatusMapper, StatusMapper>();
     }
 }
