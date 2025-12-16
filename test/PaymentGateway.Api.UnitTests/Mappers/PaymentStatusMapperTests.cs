@@ -2,6 +2,7 @@ using AutoFixture;
 using FluentAssertions;
 using PaymentGateway.Api.Mappers;
 using PaymentGateway.Api.Models;
+using PaymentGateway.Api.Models.Responses;
 
 namespace PaymentGateway.Api.UnitTests.Mappers;
 

@@ -4,7 +4,7 @@ using NSubstitute;
 using PaymentGateway.Api.Mappers;
 using PaymentGateway.Api.Models.Responses;
 using PaymentGateway.Domain.Entities;
-using PaymentStatus = PaymentGateway.Api.Models.PaymentStatus;
+using PaymentStatus = PaymentGateway.Api.Models.Responses.PaymentStatus;
 
 namespace PaymentGateway.Api.UnitTests.Mappers;
 

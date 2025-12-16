@@ -1,6 +1,5 @@
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
-
 using PaymentGateway.Config;
 using PaymentGateway.Domain.Entities;
 
