@@ -2,6 +2,8 @@ using AutoFixture;
 
 using FluentAssertions;
 
+using NSubstitute;
+
 using PaymentGateway.Api.Mappers;
 using PaymentGateway.Api.Models;
 using PaymentGateway.Api.Models.Responses;
@@ -9,29 +11,43 @@ using PaymentGateway.DAL.Entities;
 using PaymentGateway.Domain.Entities;
 using PaymentGateway.Tests.Shared.Helpers;
 
+using PaymentStatus = PaymentGateway.Api.Models.PaymentStatus;
+
 namespace PaymentGateway.Api.UnitTests.Mappers;
 
 [TestFixture]
 public class PostPaymentResponseMapperTests
 {
     private readonly Fixture _fixture = new();
-    private readonly PostPaymentResponseMapper _sut = new();
+    
+    private readonly IPaymentStatusMapper _paymentStatusMapper = Substitute.For<IPaymentStatusMapper>();
 
-    [TestCase("Authorized", PaymentStatus.Authorized)]
-    [TestCase("Declined", PaymentStatus.Declined)]
-    [TestCase("Rejected", PaymentStatus.Rejected)]
-    public void Map_GivenPayment_ReturnsPostPaymentResponseWithCorrectFields(string statusString, PaymentStatus expectedStatus)
+    private PostPaymentResponseMapper _sut;
+    
+    [SetUp]
+    public void SetUp()
+    {
+        _sut = new PostPaymentResponseMapper(_paymentStatusMapper);
+    }
+
+    [Test]
+    public void Map_GivenPayment_ReturnsPostPaymentResponseWithCorrectFields()
     {
         // Arrange
-        var payment = _fixture.Build<Payment>()
-            .With(p => p.Status, statusString)
-            .Create();
+        var expectedStatus = _fixture.Create<PaymentStatus>();
+        var payment = _fixture.Create<Payment>();
+        
+        _paymentStatusMapper
+            .Map(payment.Status)
+            .Returns(expectedStatus);
 
         // Act
         var result = _sut.Map(payment);
 
         // Assert
-        var expected = new PostPaymentResponse(
+        _paymentStatusMapper.Received(1).Map(payment.Status);
+
+        var expected = new GetPaymentResponse(
             payment.Id,
             expectedStatus,
             payment.CardNumber,

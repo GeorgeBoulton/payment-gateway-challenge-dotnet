@@ -18,17 +18,14 @@ public class PaymentDataProcessorTests
 {
     private readonly Fixture _fixture = new();
     
-    private IPaymentsRepository _paymentsRepository;
-    private IPaymentMapper _paymentMapper;
+    private readonly IPaymentsRepository _paymentsRepository = Substitute.For<IPaymentsRepository>();
+    private readonly IPaymentMapper _paymentMapper  = Substitute.For<IPaymentMapper>();
     
     private PaymentDataProcessor _sut;
 
     [SetUp]
     public void SetUp()
     {
-        _paymentsRepository = Substitute.For<IPaymentsRepository>();
-        _paymentMapper = Substitute.For<IPaymentMapper>();
-
         _sut = new PaymentDataProcessor(_paymentsRepository, _paymentMapper);
     }
 

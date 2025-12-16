@@ -1,15 +1,8 @@
 using AutoFixture;
-
 using FluentAssertions;
-
 using PaymentGateway.Api.Mappers;
-using PaymentGateway.Api.Models;
 using PaymentGateway.Api.Models.Requests;
-using PaymentGateway.Api.Models.Responses;
-using PaymentGateway.DAL.Entities;
-using PaymentGateway.DAL.Mappers;
 using PaymentGateway.Domain.Entities;
-using PaymentGateway.Tests.Shared.Helpers;
 
 namespace PaymentGateway.Api.UnitTests.Mappers;
 

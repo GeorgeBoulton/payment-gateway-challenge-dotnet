@@ -4,7 +4,9 @@ using FluentAssertions;
 
 using NSubstitute;
 
+using PaymentGateway.DAL.Entities;
 using PaymentGateway.Domain.Entities;
+using PaymentGateway.Domain.Factories;
 using PaymentGateway.Domain.Processors;
 using PaymentGateway.Domain.Services;
 using PaymentGateway.Tests.Shared.Helpers;
@@ -18,6 +20,8 @@ public class PaymentServiceTests
     
     private readonly IPaymentProcessor _paymentProcessor = Substitute.For<IPaymentProcessor>();
     private readonly IPaymentDataProcessor _paymentDataProcessor = Substitute.For<IPaymentDataProcessor>();
+    private readonly IPaymentValidator _paymentValidator = Substitute.For<IPaymentValidator>();
+    private readonly IPaymentFactory _paymentFactory = Substitute.For<IPaymentFactory>();
 
     private PaymentService _sut;
 
@@ -26,7 +30,9 @@ public class PaymentServiceTests
     {
         _sut = new PaymentService(
             _paymentProcessor,
-            _paymentDataProcessor);
+            _paymentDataProcessor,
+            _paymentValidator,
+            _paymentFactory);
     }
 
     [Test]
@@ -70,99 +76,67 @@ public class PaymentServiceTests
     }
     
     [Test]
-    public async Task ProcessPaymentAsync_GivenExpiredCard_ReturnsRejectedPayment()
+    public async Task ProcessPaymentAsync_GivenInvalidPayment_CallsCreateRejectedAndReturns()
     {
         // Arrange
-        var request = ModelHelpers.CreatePaymentRequest(
-            expiryMonth: 11,
-            expiryYear: 2025);
+        var request = ModelHelpers.CreatePaymentRequest();
+        var factoryRejectedPayment = ModelHelpers.CreatePayment(cardNumber: request.CardNumber);
+
+        _paymentValidator.IsPaymentValid(request).Returns(false);
+        _paymentFactory
+            .CreateRejected(Arg.Any<Guid>(), request)
+            .Returns(factoryRejectedPayment);
 
         // Act
         var result = await _sut.ProcessPaymentAsync(request);
 
         // Assert
-        result.Status.Should().Be("Rejected");
-        result.CardNumber.Should().EndWith(request.CardNumber[^4..]);
+        result.Should().BeEquivalentTo(factoryRejectedPayment, options =>
+            options.Excluding(p => p.CardNumber));
+        result.CardNumber.Should().Be($"**** **** **** {request.CardNumber[^4..]}");
 
+        // Ensure the payment processor was never called
         await _paymentProcessor
             .DidNotReceive()
             .ProcessPayment(Arg.Any<PaymentRequest>());
 
-        _paymentDataProcessor
-            .DidNotReceive()
-            .StorePayment(Arg.Any<Payment>());
-    }
-    
-    [Test]
-    public async Task ProcessPaymentAsync_GivenUnsupportedCurrency_ReturnsRejectedPayment()
-    {
-        // Arrange
-        var request = ModelHelpers.CreatePaymentRequest(currency: "AUD");
-
-        // Act
-        var result = await _sut.ProcessPaymentAsync(request);
-
-        // Assert
-        result.Status.Should().Be("Rejected");
-
-        await _paymentProcessor
-            .DidNotReceive()
-            .ProcessPayment(Arg.Any<PaymentRequest>());
-
+        // Ensure no payment was stored
         _paymentDataProcessor
             .DidNotReceive()
             .StorePayment(Arg.Any<Payment>());
     }
 
-    [Test]
-    public async Task ProcessPaymentAsync_WhenBankAuthorizes_ReturnsAuthorizedPayment()
+    [TestCase(true)]
+    [TestCase(false)]
+    public async Task ProcessPaymentAsync_GivenValidPayment_ProcessesAndReturnsPayment(bool authorized)
     {
         // Arrange
-        var authCode = _fixture.Create<string>();
-        var request = ModelHelpers.CreatePaymentRequest(currency: "GBP");
-        var response = new PaymentResponse(true, authCode);
+        var request = ModelHelpers.CreatePaymentRequest();
+        var response = new PaymentResponse(authorized, authorized ? _fixture.Create<string>() : null);
+        var factoryPayment = ModelHelpers.CreatePayment(cardNumber: request.CardNumber);
 
+        _paymentValidator.IsPaymentValid(request).Returns(true);
         _paymentProcessor
             .ProcessPayment(request)
             .Returns(response);
+        _paymentFactory
+            .CreateFromResponse(Arg.Any<Guid>(), request, response)
+            .Returns(factoryPayment);
 
         // Act
         var result = await _sut.ProcessPaymentAsync(request);
 
         // Assert
-        result.Status.Should().Be("Authorized");
-        result.AuthorizationCode.Should().Be(authCode);
+        result.Should().BeEquivalentTo(factoryPayment, options =>
+            options.Excluding(p => p.CardNumber));
         result.CardNumber.Should().Be($"**** **** **** {request.CardNumber[^4..]}");
 
         _paymentDataProcessor
             .Received(1)
-            .StorePayment(Arg.Is<Payment>(p =>
-                p.Status == "Authorized" &&
-                p.AuthorizationCode == authCode));
-    }
+            .StorePayment(factoryPayment);
 
-    [Test]
-    public async Task ProcessPaymentAsync_WhenBankDeclines_ReturnsDeclinedPayment()
-    {
-        // Arrange
-        var request = ModelHelpers.CreatePaymentRequest(currency: "USD");
-        var response = new PaymentResponse(false, null);
-
-        _paymentProcessor
-            .ProcessPayment(request)
-            .Returns(response);
-
-        // Act
-        var result = await _sut.ProcessPaymentAsync(request);
-
-        // Assert
-        result.Status.Should().Be("Declined");
-
-        _paymentDataProcessor
+        _paymentFactory
             .Received(1)
-            .StorePayment(Arg.Is<Payment>(p =>
-                p.Status == "Declined"));
+            .CreateFromResponse(Arg.Any<Guid>(), request, response);
     }
-
-
 }

@@ -1,4 +1,9 @@
+using AutoFixture;
+
 using FluentAssertions;
+
+using NSubstitute;
+
 using PaymentGateway.DAL.Entities;
 using PaymentGateway.DAL.Mappers;
 using PaymentGateway.Domain.Entities;
@@ -9,18 +14,30 @@ namespace PaymentGateway.DAL.UnitTests.Mappers;
 [TestFixture]
 public class PaymentMapperTests
 {
-    private readonly PaymentMapper _sut = new();
+    private readonly Fixture _fixture = new();
+    
+    private readonly IStatusMapper _statusMapper = Substitute.For<IStatusMapper>();
+    
+    private PaymentMapper _sut;
+    
+    [SetUp]
+    public void SetUp()
+    {
+        _sut = new PaymentMapper(_statusMapper);
+    }
     
     [Test]
     public void Map_GivenPayment_ReturnsPaymentEntity()
     {
         var paymentId = Guid.NewGuid();
-        var status = Status.Authorized;
-        
+        var expectedStatus = Status.Authorized;
         // Arrange
         var payment = ModelHelpers.CreatePayment(
-            id: paymentId,
-            status: status);
+            id: paymentId);
+        
+        _statusMapper
+            .Map(payment.Status)
+            .Returns(expectedStatus);
         
         // Act
         var result = _sut.Map(payment);
@@ -28,7 +45,7 @@ public class PaymentMapperTests
         // Assert
         var expected = new PaymentEntity(
             paymentId,
-            status,
+            expectedStatus,
             payment.CardNumber,
             payment.ExpiryMonth,
             payment.ExpiryYear,
@@ -44,24 +61,27 @@ public class PaymentMapperTests
     {
         // Arrange
         var paymentId = Guid.NewGuid();
-        var status = Status.Declined;
+        var expectedStatus = Status.Declined;
         var payment = ModelHelpers.CreatePayment(
-            id: paymentId,
-            status: status);
+            id: paymentId);
         
         // Act
-        var result = _sut.Map(payment);
+        _statusMapper
+            .Map(payment.Status)
+            .Returns(expectedStatus);
             
         // Assert
         var expected = new PaymentEntity(
             paymentId,
-            status,
+            expectedStatus,
             payment.CardNumber,
             payment.ExpiryMonth,
             payment.ExpiryYear,
             payment.Currency,
             payment.Amount,
             null);
+
+        var result = _sut.Map(payment);
             
         result.Should().BeEquivalentTo(expected);
         result.AuthorizationCode.Should().BeNull();
@@ -73,10 +93,13 @@ public class PaymentMapperTests
     {
         // Arrange
         var paymentId = Guid.NewGuid();
-        var status = Status.Authorized;
+        var expectedPaymentStatus = PaymentStatus.Authorized;
         var paymentEntity = ModelHelpers.CreatePaymentEntity(
-            id: paymentId,
-            status: status);
+            id: paymentId);
+        
+        _statusMapper
+            .Map(paymentEntity.Status)
+            .Returns(expectedPaymentStatus);
         
         // Act
         var result = _sut.Map(paymentEntity);
@@ -89,7 +112,7 @@ public class PaymentMapperTests
             paymentEntity.ExpiryYear,
             paymentEntity.Currency,
             paymentEntity.Amount,
-            status.ToString(),
+            expectedPaymentStatus,
             paymentEntity.AuthorizationCode);
             
         result.Should().BeEquivalentTo(expected);
@@ -100,10 +123,13 @@ public class PaymentMapperTests
     {
         // Arrange
         var paymentId = Guid.NewGuid();
-        var status = Status.Declined;
+        var expectedPaymentStatus = PaymentStatus.Declined;
         var paymentEntity = ModelHelpers.CreatePaymentEntity(
-            id: paymentId,
-            status: status);
+            id: paymentId);
+        
+        _statusMapper
+            .Map(paymentEntity.Status)
+            .Returns(expectedPaymentStatus);
         
         // Act
         var result = _sut.Map(paymentEntity);
@@ -116,7 +142,7 @@ public class PaymentMapperTests
             paymentEntity.ExpiryYear,
             paymentEntity.Currency,
             paymentEntity.Amount,
-            status.ToString(),
+            expectedPaymentStatus,
             paymentEntity.AuthorizationCode);
             
         result.Should().BeEquivalentTo(expected);

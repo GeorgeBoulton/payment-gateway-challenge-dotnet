@@ -20,11 +20,9 @@ public static class ModelHelpers
         int? expiryYear = null,
         string? currency = null,
         int? amount = null,
-        Status? status = null,
+        PaymentStatus? status = null,
         string? authorizationCode = null)
     {
-        var localStatus = status ?? fixture.Create<Status>();
-
         return new Payment(
             id ?? fixture.Create<Guid>(),
             cardNumber ?? GenerateNumberSequence(_cardLength),
@@ -32,9 +30,9 @@ public static class ModelHelpers
             expiryYear ?? GenerateExpiryYear(),
             currency ?? GetCurrency(),
             amount ?? fixture.Create<int>(),
-            (status ?? localStatus).ToString(),
+            status ?? fixture.Create<PaymentStatus>(),
             // Setup authorization code to setup correctly corresponding to status. Can provide if you wish.
-            authorizationCode ?? (localStatus == Status.Authorized ? fixture.Create<Guid>().ToString() : null)
+            authorizationCode ?? (status == PaymentStatus.Authorized ? fixture.Create<Guid>().ToString() : null)
         );
     }
     
