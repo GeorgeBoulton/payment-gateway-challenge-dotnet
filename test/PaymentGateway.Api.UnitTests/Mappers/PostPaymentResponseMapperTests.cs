@@ -1,15 +1,9 @@
 using AutoFixture;
-
 using FluentAssertions;
-
 using NSubstitute;
-
 using PaymentGateway.Api.Mappers;
-using PaymentGateway.Api.Models;
 using PaymentGateway.Api.Models.Responses;
-using PaymentGateway.DAL.Entities;
 using PaymentGateway.Domain.Entities;
-using PaymentGateway.Tests.Shared.Helpers;
 
 using PaymentStatus = PaymentGateway.Api.Models.PaymentStatus;
 

@@ -1,9 +1,7 @@
 using System.Net;
 using AutoFixture;
 using FluentAssertions;
-
 using Microsoft.Extensions.Logging;
-
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
 using PaymentGateway.DAL.Clients;

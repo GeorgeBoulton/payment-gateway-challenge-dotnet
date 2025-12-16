@@ -1,5 +1,4 @@
 using AutoFixture;
-
 using PaymentGateway.DAL.DAOs;
 using PaymentGateway.DAL.Entities;
 using PaymentGateway.Domain.Entities;

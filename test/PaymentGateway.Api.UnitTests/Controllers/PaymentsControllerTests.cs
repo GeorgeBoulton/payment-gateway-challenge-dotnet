@@ -1,14 +1,10 @@
 using AutoFixture;
-
 using FluentAssertions;
-
 using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Extensions.Logging;
-
 using NSubstitute;
 using NSubstitute.ExceptionExtensions;
-
 using PaymentGateway.Api.Controllers;
 using PaymentGateway.Api.Mappers;
 using PaymentGateway.Api.Models.Requests;
@@ -85,7 +81,6 @@ public class PaymentsControllerTests
 
         // Assert
         result.Should().BeOfType<NotFoundObjectResult>();
-        // todo check message
     }
     
     [Test]
@@ -108,7 +103,6 @@ public class PaymentsControllerTests
         var ok = result.Should().BeOfType<OkObjectResult>().Subject;
         ok.StatusCode.Should().Be(StatusCodes.Status200OK);
         ok.Value.Should().BeEquivalentTo(postResponse);
-        // todo check body
     }
     
     [Test]

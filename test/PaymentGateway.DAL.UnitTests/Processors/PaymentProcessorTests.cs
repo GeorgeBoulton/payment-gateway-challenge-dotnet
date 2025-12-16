@@ -1,7 +1,5 @@
 using AutoFixture;
-
 using FluentAssertions;
-
 using NSubstitute;
 using PaymentGateway.DAL.Clients;
 using PaymentGateway.DAL.DAOs;
@@ -54,6 +52,4 @@ public class PaymentProcessorTests
         await _bankSimulatorClient.Received(1).ProcessPaymentRequestAsync(paymentRequestDao);
         _paymentResponseMapper.Received(1).Map(paymentResponseDao);
     }
-
-    // todo handle exception? or just at top layer?
 }

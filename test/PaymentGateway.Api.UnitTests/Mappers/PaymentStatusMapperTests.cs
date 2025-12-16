@@ -1,7 +1,5 @@
 using AutoFixture;
-
 using FluentAssertions;
-
 using PaymentGateway.Api.Mappers;
 using PaymentGateway.Api.Models;
 

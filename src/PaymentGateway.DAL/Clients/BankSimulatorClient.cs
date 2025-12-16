@@ -1,7 +1,5 @@
 using System.Net;
-
 using Microsoft.Extensions.Logging;
-
 using PaymentGateway.DAL.DAOs;
 using PaymentGateway.Shared.Exceptions;
 

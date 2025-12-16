@@ -1,7 +1,5 @@
 using Microsoft.Extensions.Logging;
-
 using NSubstitute;
-using NSubstitute.ReceivedExtensions;
 
 namespace PaymentGateway.Tests.Shared.Extensions;
 
@@ -14,6 +12,6 @@ public static class LoggerExtensions
             Arg.Any<EventId>(),
             Arg.Is<object>(state => state.ToString().Contains(containsMessage)),
             Arg.Any<Exception>(),
-            Arg.Any<Func<object, Exception, string>>());
+            Arg.Any<Func<object, Exception, string>>()!);
     }
 }

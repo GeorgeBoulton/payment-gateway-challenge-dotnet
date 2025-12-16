@@ -1,11 +1,7 @@
 using AutoFixture;
-
 using FluentAssertions;
-
 using Microsoft.Extensions.Logging;
-
 using NSubstitute;
-
 using PaymentGateway.DAL.Entities;
 using PaymentGateway.DAL.Mappers;
 using PaymentGateway.DAL.Processors;

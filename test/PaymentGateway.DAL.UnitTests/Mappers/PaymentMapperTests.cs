@@ -1,9 +1,6 @@
 using AutoFixture;
-
 using FluentAssertions;
-
 using NSubstitute;
-
 using PaymentGateway.DAL.Entities;
 using PaymentGateway.DAL.Mappers;
 using PaymentGateway.Domain.Entities;
@@ -29,9 +26,9 @@ public class PaymentMapperTests
     [Test]
     public void Map_GivenPayment_ReturnsPaymentEntity()
     {
+        // Arrange
         var paymentId = Guid.NewGuid();
         var expectedStatus = Status.Authorized;
-        // Arrange
         var payment = ModelHelpers.CreatePayment(
             id: paymentId);
         

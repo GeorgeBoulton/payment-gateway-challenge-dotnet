@@ -1,5 +1,4 @@
 using Microsoft.Extensions.Logging;
-
 using PaymentGateway.Domain.Entities;
 using PaymentGateway.Domain.Factories;
 using PaymentGateway.Domain.Processors;

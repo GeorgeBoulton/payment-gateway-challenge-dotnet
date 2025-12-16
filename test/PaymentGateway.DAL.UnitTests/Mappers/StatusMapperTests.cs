@@ -1,5 +1,4 @@
 using FluentAssertions;
-
 using PaymentGateway.DAL.Entities;
 using PaymentGateway.DAL.Mappers;
 using PaymentGateway.Domain.Entities;

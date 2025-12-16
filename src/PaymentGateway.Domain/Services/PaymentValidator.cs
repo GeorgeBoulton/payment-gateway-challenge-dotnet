@@ -1,12 +1,11 @@
 using Microsoft.Extensions.Logging;
-
 using PaymentGateway.Domain.Entities;
 
 namespace PaymentGateway.Domain.Services;
 
 public class PaymentValidator(ILogger<PaymentValidator> logger) : IPaymentValidator
 {
-    // Hashset O(1) lookup
+    // Hashset has O(1) lookup
     private static readonly HashSet<string> ApprovedCurrencies = ["GBP", "EUR", "USD"];
     
     public bool IsPaymentValid(PaymentRequest paymentRequest)
@@ -22,11 +21,9 @@ public class PaymentValidator(ILogger<PaymentValidator> logger) : IPaymentValida
     
     private static bool IsExpiryInFuture(int expiryMonth, int expiryYear)
     {
-        // First day of the month after the expiry month
         var expiryDate = new DateOnly(expiryYear, expiryMonth, 1)
             .AddMonths(1);
-
-        // If this is true it is still valid for the remainder of the month
+        
         return expiryDate > DateOnly.FromDateTime(DateTime.UtcNow);
     }
     

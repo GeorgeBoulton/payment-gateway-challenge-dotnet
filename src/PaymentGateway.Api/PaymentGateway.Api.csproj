@@ -13,6 +13,7 @@
   <ItemGroup>
     <ProjectReference Include="..\PaymentGateway.Domain\PaymentGateway.Domain.csproj" />
     <ProjectReference Include="..\PaymentGateway.DAL\PaymentGateway.DAL.csproj" />
+    <!--Reference to DAL here is only for DI-->
   </ItemGroup>
 
 </Project>
